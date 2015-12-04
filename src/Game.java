@@ -133,7 +133,7 @@ public class Game extends JFrame implements ActionListener, KeyListener {
         @Override
         public void paintComponent(Graphics g) {
             super.paintComponent(g);
-            int difficulty = 8;
+            int difficulty = 12;
             BufferedImage ship = loadImage("rocket.png");
 
             leftCornerX = cordX;
@@ -147,7 +147,7 @@ public class Game extends JFrame implements ActionListener, KeyListener {
                 int[] botHeight = {75, 160, 130, 80, 100, 50, 80, 110, 20, 30, 100, 65, 50, 100};
 
                 g.setColor(Color.WHITE);
-                for (int i = 0; i < 8; i++) {
+                for (int i = 0; i < difficulty; i++) {
                     g.drawLine(i * (getWidth() / difficulty), topHeight[i], (i + 1) * (getWidth() / difficulty), topHeight[i]);
                     g.drawLine((i + 1) * (getWidth() / difficulty), topHeight[i], (i + 1) * (getWidth() / difficulty), topHeight[i + 1]);
                 }
@@ -188,12 +188,20 @@ public class Game extends JFrame implements ActionListener, KeyListener {
 	                    }
                     }
                 }
+
+	            if (leftCornerX >= (difficulty - 1) * (getWidth() / difficulty)) {
+		            if (currentAngle >= 180) {
+			            System.out.println("Good landing");
+		            }
+		            System.out.println(currentAngle);
+//		            System.out.println("endzone");
+	            }
                 
             }
 
 
 
-            System.out.println(currentQuadrant);
+//            System.out.println(currentQuadrant);
 
 
             Graphics2D g2d = (Graphics2D) g;
