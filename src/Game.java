@@ -9,6 +9,7 @@ import java.awt.geom.Arc2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Random;
@@ -26,7 +27,7 @@ import java.util.Random;
  */
 
 
-public class Main extends JFrame implements ActionListener, KeyListener {
+public class Game extends JFrame implements ActionListener, KeyListener {
 
     private JPanel panel;
     private JPanel drawing;
@@ -58,17 +59,15 @@ public class Main extends JFrame implements ActionListener, KeyListener {
     private Timer timer = new Timer(15, this);
 
 
-    public Main() {
+    public Game() {
 
 /*
-		 * Set the dimensions of the window to the size of the inhabitable screen. Basically it the window will take
+         * Set the dimensions of the window to the size of the inhabitable screen. Basically it the window will take
 		 * up as much screen space as is available without covering things.
 		 */
 
-        double screenWidth = GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds().getWidth();
-        double screenHeight = GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds().getHeight();
 
-        this.setSize((int) screenWidth, (int) screenHeight);
+        this.setSize(screenWidth, screenHeight);
         this.setMinimumSize(new Dimension(610, 350));
 
 
@@ -90,14 +89,12 @@ public class Main extends JFrame implements ActionListener, KeyListener {
 
         drawing = new GraphPanel();
         drawing.setSize(getWidth(), getHeight());
-        panel.add(drawing);
+        drawing.setBackground(Color.BLACK);
 
-        panel.setSize(getWidth(), getHeight());
-        imageLoader();
-        this.add(panel);
+        this.add(drawing);
         this.setJMenuBar(menuBar);
         this.validate();
-        this.setTitle("Fireworks Pro");
+        this.setTitle("Game");
 
 
     }
@@ -106,89 +103,127 @@ public class Main extends JFrame implements ActionListener, KeyListener {
         repaint();
     }
 
-    public void imageLoader() {
+    public BufferedImage loadImage(String fileName) {
+
+        BufferedImage image = null;
         try {
-            rocket = ImageIO.read(new File("rocket.png"));
+            image = ImageIO.read(new File(fileName));
         } catch (IOException ex) {
             ex.printStackTrace();
         }
 
         addKeyListener(this);
+        return image;
     }
+
     public static void main(String[] args) {
-        Main app = new Main();
+        Game app = new Game();
         app.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         app.setVisible(true);
     }
 
 
-
     public class GraphPanel extends JPanel {
 
-        private boolean setup = false;
-        private Rocket ship;
+        private boolean setup;
 
-        public void setupEnvironment(Graphics g) {
-            if (!setup) {
-                g.setColor(Color.CYAN);
-                g.fillRect(0, 0, getWidth(), getHeight());
-                Random rand = new Random();
-                HashMap<Integer, Integer> topBlocks = new HashMap<>();
-
-
-                // Offset for padding
-                // I'm using a hard value here because I need a minimum of 30px. It should look fine on most screens.
-                int offset = 35;
-
-
-
-                // Draw some fake stars
-                for (int i = 0; i < getWidth() / 20; i++) {
-                    g.setColor(Color.WHITE);
-                    int max = getWidth() - offset;
-                    int randomIntX = rand.nextInt(max - offset) + 1;
-                    int randomIntY = rand.nextInt((max - offset) + 1);
-                    g.drawLine(randomIntX, randomIntY, randomIntX, randomIntY);
-                    g.setColor(Color.BLACK);
-                    g.fillRect(0, 0, getWidth(), offset);
-                    g.setColor(Color.WHITE);
-                }
-                for (int i = 0; i < getWidth() / 100; i++) {
-                    g.setColor(Color.WHITE);
-                    int randomIntY = rand.nextInt(getHeight()) + 1;
-                    topBlocks.put(i, randomIntY);
-                }
-
-
-                System.out.println(topBlocks);
-                setup = true;
-            }
-
+        public GraphPanel() {
+            setup = false;
         }
+
+        int level = 1;
+        int currentQuadrant;
 
         @Override
         public void paintComponent(Graphics g) {
             super.paintComponent(g);
+            int difficulty = 8;
+            BufferedImage ship = loadImage("rocket.png");
+
+            leftCornerX = cordX;
+            rightCornerX = cordX + ship.getWidth(this);
+            topCornerY = cordY;
+            bottomCornerY = cordY + ship.getHeight(this);
+
+            if (level == 1) {
+                // Top rocks
+                int[] topHeight = {100, 50, 65, 100, 30, 20, 110, 80, 50, 100, 80, 40, 30, 75};
+                int[] botHeight = {75, 160, 130, 80, 100, 50, 80, 110, 20, 30, 100, 65, 50, 100};
+
+                g.setColor(Color.WHITE);
+                for (int i = 0; i < 8; i++) {
+                    g.drawLine(i * (getWidth() / difficulty), topHeight[i], (i + 1) * (getWidth() / difficulty), topHeight[i]);
+                    g.drawLine((i + 1) * (getWidth() / difficulty), topHeight[i], (i + 1) * (getWidth() / difficulty), topHeight[i + 1]);
+                }
+
+                // Bottom rocks
+                for (int i = 0; i < 8; i++) {
+                    if (i == 7) {
+                        g.setColor(Color.GREEN);
+                    }
+                    g.drawLine(i * (getWidth() / difficulty), getHeight() - botHeight[i], (i + 1) * (getWidth() / difficulty), getHeight() - botHeight[i]);
+                    g.drawLine((i + 1) * (getWidth() / difficulty), getHeight() - botHeight[i], (i + 1) * (getWidth() / difficulty), getHeight() - botHeight[i + 1]);
+                }
+
+                for (int i = 0; i < 8; i++) {
+                    if (leftCornerX >= i * (getWidth() / difficulty) && leftCornerX < (i + 1) * (getWidth() / difficulty)) {
+                        currentQuadrant = i;
+                        if (topCornerY <= topHeight[i]) {
+                            System.out.println("Hit!");
+                            g.drawOval(cordX, cordY, 1, 1);
+                        }
+                    }
+                }
+                
+            }
+
+            System.out.println(currentQuadrant);
+
+
+            Graphics2D g2d = (Graphics2D) g;
+            AffineTransform origXform = g2d.getTransform();
+
+            origXform.rotate(Math.toRadians(currentAngle), cordX + ship.getWidth(this) / 2, cordY + ship.getHeight(this) / 2);
+            g2d.setTransform(origXform);
+            g2d.drawImage(ship, cordX, cordY, this);
+            g2d.setColor(Color.RED);
+            g2d.drawRect(cordX, cordY, ship.getWidth(this), ship.getHeight(this));
 
 
 
 
 
-            bf = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_RGB);
+            if (isRotatingRight) {
+                //rotateRight 5 degrees at a time
+                currentAngle += 3.0;
+                if (currentAngle >= 360.0) {
+                    currentAngle = 0;
+                }
+            }
+
+            if (isRotatingLeft) {
+                //rotateRight 5 degrees at a time
+                currentAngle -= 3.0;
+                if (currentAngle <= 0) {
+                    currentAngle = 360.0;
+                }
+            }
+
+            if (isMovingForward) {
+
+                cordX += (int) (velocity * Math.cos(Math.toRadians(currentAngle)));
+                cordY += (int) (velocity * Math.sin(Math.toRadians(currentAngle)));
+            }
 
 
-            animation(bf.getGraphics());
-            g.drawImage(bf,0,0,null);
-
-            setupEnvironment(g);
-
+            timer.start();
         }
 
     }
 
     public void animation(Graphics g) {
 
-        leftCornerX = cordX;
+/*        leftCornerX = cordX;
         rightCornerX = cordX + rocket.getWidth(this);
         topCornerY = cordY;
         bottomCornerY = cordY + rocket.getHeight(this);
@@ -230,8 +265,8 @@ public class Main extends JFrame implements ActionListener, KeyListener {
         Graphics2D g2d = (Graphics2D)g;
         AffineTransform origXform = g2d.getTransform();
 
-/*        g.setColor(Color.BLACK);
-        g.fillRect(0, 0, getWidth(), getHeight());*/
+*//*        g.setColor(Color.BLACK);
+        g.fillRect(0, 0, getWidth(), getHeight());*//*
 
         origXform.rotate(Math.toRadians(currentAngle), cordX + rocket.getWidth(this)/2, cordY + rocket.getHeight(this)/2);
         g2d.setTransform(origXform);
@@ -243,7 +278,7 @@ public class Main extends JFrame implements ActionListener, KeyListener {
 
 
 
-        timer.start();
+        timer.start();*/
     }
 
     public void startRotatingRight() {
@@ -291,7 +326,6 @@ public class Main extends JFrame implements ActionListener, KeyListener {
             }
             break;
         }
-        repaint();
     }
 
     public void keyTyped(KeyEvent ke) {
@@ -319,17 +353,16 @@ public class Main extends JFrame implements ActionListener, KeyListener {
             }
             break;
         }
-        repaint();
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        repaint();
-        cordY += 10/GLOBALSCALE;
+//        cordY += 10 / GLOBALSCALE;
         if (e.getSource() == resetMenuItem) {
 
         }
         updateFields();
+        repaint();
     }
 
 }
