@@ -76,12 +76,9 @@ public class Main extends JFrame implements ActionListener {
 
         panel.setSize(getWidth(), getHeight());
 
-
-
         this.add(panel);
         this.setJMenuBar(menuBar);
         this.validate();
-
         this.setTitle("Fireworks Pro");
 
 

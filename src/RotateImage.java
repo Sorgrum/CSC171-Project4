@@ -27,6 +27,16 @@ public class RotateImage extends JFrame implements KeyListener, ActionListener {
     private boolean isRotatingRight = false;
     private boolean isMovingForward = false;
 
+    int leftCornerX;
+    int rightCornerX;
+    int topCornerY;
+    int bottomCornerY;
+
+
+    public static void main(String[] args) {
+        ship = new RotateImage(TestImage);
+        ship.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+    }
 
     public RotateImage(Image TestImage) {
         this.TestImage = TestImage;
@@ -38,13 +48,12 @@ public class RotateImage extends JFrame implements KeyListener, ActionListener {
         catch (Exception e) {
             e.printStackTrace();
         }
+        
         setTitle("Testing....");
         setSize(screenWidth, screenHeight);
         imageLoader();
         setVisible(true);
     }
-
-
 
     public void imageLoader() {
         try {
@@ -57,8 +66,6 @@ public class RotateImage extends JFrame implements KeyListener, ActionListener {
 
         addKeyListener(this);
     }
-
-
 
     public void paint(Graphics g){
 
@@ -73,6 +80,21 @@ public class RotateImage extends JFrame implements KeyListener, ActionListener {
     }
 
     public void animation(Graphics g) {
+
+        leftCornerX = cordX;
+        rightCornerX = cordX + TestImage.getWidth(this);
+        topCornerY = cordY;
+        bottomCornerY = cordY + TestImage.getHeight(this);
+
+        if (leftCornerX <= 0) {
+            cordX = 0;
+        } else if (topCornerY <= 0) {
+            cordY = 0;
+        } else if (rightCornerX >= getWidth()) {
+            cordX = getWidth() - TestImage.getWidth(this);
+        } else if (topCornerY >= getHeight()) {
+            cordY = getHeight();
+        }
 
         if (isRotatingRight) {
             //rotateRight 5 degrees at a time
@@ -91,6 +113,7 @@ public class RotateImage extends JFrame implements KeyListener, ActionListener {
         }
 
         if (isMovingForward) {
+
             cordX += (int) (velocity * Math.cos(Math.toRadians(currentAngle)));
             cordY += (int) (velocity * Math.sin(Math.toRadians(currentAngle)));
         }
@@ -104,26 +127,41 @@ public class RotateImage extends JFrame implements KeyListener, ActionListener {
         Graphics2D g2d = (Graphics2D)g;
         AffineTransform origXform = g2d.getTransform();
 
+        g.setColor(Color.BLACK);
+        g.fillRect(0, 0, getWidth(), getHeight());
 
-
-        //draw image centered in panel
-        int x = (getWidth() - TestImage.getWidth(this))/2;
-        int y = (getHeight() - TestImage.getHeight(this))/2;
         origXform.rotate(Math.toRadians(currentAngle), cordX + TestImage.getWidth(this)/2, cordY + TestImage.getHeight(this)/2);
-//        System.out.println(currentAngle);
-        g2d.setTransform(origXform);
-
-        //g2d.drawImage(TestImage, x, y, this);
         g2d.setTransform(origXform);
         g2d.drawImage(TestImage, cordX, cordY, this);
+        g2d.setColor(Color.RED);
+        g2d.drawRect(cordX, cordY, TestImage.getWidth(this), TestImage.getHeight(this));
+
+        g.setColor(Color.YELLOW);
+
         timer.start();
     }
 
-    public static void main(String[] args) {
-        ship = new RotateImage(TestImage);
-        ship.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
-    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     public void startRotatingRight() {
         isRotatingRight = true;
