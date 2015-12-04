@@ -1,18 +1,14 @@
 import javax.imageio.ImageIO;
 import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.Arc2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Array;
-import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.Random;
 
 /**
  * Student Name: Marcelo Gheiler
@@ -43,11 +39,11 @@ public class Game extends JFrame implements ActionListener, KeyListener {
     private boolean isRotatingRight = false;
     private boolean isMovingForward = false;
 
-    private int cordX = 100;
-    private int cordY = 100;
-    private double currentAngle;
-    int screenWidth = (int) GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds().getWidth() / 2;
-    int screenHeight = (int) GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds().getHeight() / 2;
+	int screenHeight = (int) GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds().getHeight() / 2;
+	int screenWidth = (int) GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds().getWidth() / 2;
+	private int cordX = 30;
+	private int cordY = screenHeight /3;
+	private double currentAngle;
     private final int GLOBALSCALE = 5;
     private int velocity = 7;
 
@@ -157,25 +153,45 @@ public class Game extends JFrame implements ActionListener, KeyListener {
                 }
 
                 // Bottom rocks
-                for (int i = 0; i < 8; i++) {
-                    if (i == 7) {
+                for (int i = 0; i < difficulty; i++) {
+                    if (i == difficulty - 1) {
                         g.setColor(Color.GREEN);
                     }
                     g.drawLine(i * (getWidth() / difficulty), getHeight() - botHeight[i], (i + 1) * (getWidth() / difficulty), getHeight() - botHeight[i]);
                     g.drawLine((i + 1) * (getWidth() / difficulty), getHeight() - botHeight[i], (i + 1) * (getWidth() / difficulty), getHeight() - botHeight[i + 1]);
                 }
 
-                for (int i = 0; i < 8; i++) {
+                // Check if the ship hits one of the rocks.
+                for (int i = 0; i < difficulty; i++) {
                     if (leftCornerX >= i * (getWidth() / difficulty) && leftCornerX < (i + 1) * (getWidth() / difficulty)) {
                         currentQuadrant = i;
                         if (topCornerY <= topHeight[i]) {
                             System.out.println("Hit!");
                             g.drawOval(cordX, cordY, 1, 1);
                         }
+
+                        if (bottomCornerY >= getHeight() - botHeight[i]) {
+                            System.out.println("Bot Hit!");
+                            g.drawOval(cordX, cordY + ship.getHeight(), 1, 1);
+                        }
+                    }
+                    if (rightCornerX >= i * (getWidth() / difficulty) && rightCornerX < (i + 1) * (getWidth() /
+                            difficulty)) {
+                        if (topCornerY <= topHeight[i]) {
+                            System.out.println("Hit!");
+                            g.drawOval(cordX + ship.getWidth(), cordY, 1, 1);
+                        }
+
+	                    if (bottomCornerY >= getHeight() - botHeight[i]) {
+		                    System.out.println("Bot Hit!");
+		                    g.drawOval(cordX + ship.getWidth(), cordY + ship.getHeight(), 1, 1);
+	                    }
                     }
                 }
                 
             }
+
+
 
             System.out.println(currentQuadrant);
 
@@ -318,7 +334,7 @@ public class Game extends JFrame implements ActionListener, KeyListener {
             }
             break;
             case KeyEvent.VK_DOWN: {
-//                cordY += 5;
+//                cordY += 1;
             }
             break;
             case KeyEvent.VK_UP: {
@@ -357,7 +373,7 @@ public class Game extends JFrame implements ActionListener, KeyListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-//        cordY += 10 / GLOBALSCALE;
+        cordY += 10 / GLOBALSCALE;
         if (e.getSource() == resetMenuItem) {
 
         }
