@@ -215,6 +215,7 @@ public class Game extends JFrame implements ActionListener, KeyListener {
                         timeRemainingCharArray[i] = timeRemainingText.get(i);
                     }
 
+                    g.setColor(Color.WHITE);
                     if (!singleplayer) {
                         g.setColor(player1Color);
                     }
@@ -268,6 +269,7 @@ public class Game extends JFrame implements ActionListener, KeyListener {
                     originY = getHeight() / 2;
                     originY2 = originY + ship.getHeight();
 
+
                     // Draw the top rocks
                     for (int i = 0; i < difficulty; i++) {
                         g.drawLine(i * (getWidth() / difficulty), topHeight.get(i), (i + 1) * (getWidth() / difficulty), topHeight.get(i));
@@ -317,8 +319,30 @@ public class Game extends JFrame implements ActionListener, KeyListener {
                                 g.drawOval(cordX, cordY, 1, 1);
                             }
 
-                            if (bottomCornerY >= getHeight() - botHeight.get(i)) {
-                                lives -= 1;
+                            if (bottomCornerY < getHeight() - botHeight.get(difficulty - 1)) {
+                                if (bottomCornerY >= getHeight() - botHeight.get(i)) {
+                                    lives -= 1;
+
+                                    // I want the ship to always start facing upwards
+                                    currentAngle = 270;
+
+                                    // Send the user back to the beginning of the level
+                                    cordX = 30;
+                                    cordY = originY;
+
+                                    timeElapsed = 0;
+                                    g.drawOval(cordX, cordY + ship.getHeight(), 1, 1);
+                                }
+                            }
+
+                        }
+                        if (rightCornerX >= i * (getWidth() / difficulty) && rightCornerX < (i + 1) * (getWidth() / difficulty)) {
+                            if (topCornerY <= topHeight.get(i)) {
+
+                                g.drawOval(cordX + ship.getWidth(), cordY, 1, 1);
+                            }
+                            if (!singleplayer && topCornerY2 <= topHeight.get(i)) {
+                                lives2 -= 1;
 
                                 // I want the ship to always start facing upwards
                                 currentAngle = 270;
@@ -328,18 +352,23 @@ public class Game extends JFrame implements ActionListener, KeyListener {
                                 cordY = originY;
 
                                 timeElapsed = 0;
-                                g.drawOval(cordX, cordY + ship.getHeight(), 1, 1);
-                            }
-                        }
-                        if (rightCornerX >= i * (getWidth() / difficulty) && rightCornerX < (i + 1) * (getWidth() /
-                                difficulty)) {
-                            if (topCornerY <= topHeight.get(i)) {
-
-                                g.drawOval(cordX + ship.getWidth(), cordY, 1, 1);
+                                g.drawOval(cordX, cordY, 1, 1);
                             }
 
-                            if (bottomCornerY >= getHeight() - botHeight.get(i)) {
-                                g.drawOval(cordX + ship.getWidth(), cordY + ship.getHeight(), 1, 1);
+                            if (bottomCornerY < getHeight() - botHeight.get(difficulty - 1)) {
+                                if (bottomCornerY >= getHeight() - botHeight.get(i)) {
+                                    lives -= 1;
+
+                                    // I want the ship to always start facing upwards
+                                    currentAngle = 270;
+
+                                    // Send the user back to the beginning of the level
+                                    cordX = 30;
+                                    cordY = originY;
+
+                                    timeElapsed = 0;
+                                    g.drawOval(cordX, cordY + ship.getHeight(), 1, 1);
+                                }
                             }
                         }
                     }
@@ -370,6 +399,30 @@ public class Game extends JFrame implements ActionListener, KeyListener {
                         botHeight.clear();
                         timeElapsed = 0;
                     }
+                } else {
+                    String text = "Game Over!";
+                    FontMetrics fm = g.getFontMetrics();
+                    int totalWidth = (fm.stringWidth(text) * 2) + 4;
+
+                    // Baseline
+                    int x = (getWidth() - totalWidth) / 2;
+                    int y = (getHeight() - fm.getHeight()) / 2;
+                    g.setColor(Color.WHITE);
+                    g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 1.8F));
+                    g.drawString(text, x, y + ((fm.getDescent() + fm.getAscent()) / 2));
+
+                    text = "Level reached: " + level;
+                    totalWidth = (fm.stringWidth(text) * 2) + 4;
+                    x = (getWidth() - totalWidth) / 2;
+                    y = (getHeight() - fm.getHeight()) / 2;
+                    y += 1.5 * fm.getHeight();
+                    g.drawString(text, x, y + ((fm.getDescent() + fm.getAscent()) / 2));
+
+                    text = "Free fly mode.";
+                    totalWidth = (fm.stringWidth(text) * 2) + 4;
+                    x = (getWidth() - totalWidth) / 2;
+                    y += 1.5 * fm.getHeight();
+                    g.drawString(text, x, y + ((fm.getDescent() + fm.getAscent()) / 2));
                 }
 
 
@@ -411,19 +464,23 @@ public class Game extends JFrame implements ActionListener, KeyListener {
 
                 // Rotate the ship
                 Graphics2D g2d = (Graphics2D) g;
+                AffineTransform oldXform = g2d.getTransform();
                 AffineTransform origXform = g2d.getTransform();
 
                 origXform.rotate(Math.toRadians(currentAngle), cordX + ship.getWidth(this) / 2, cordY + ship.getHeight(this) / 2);
                 g2d.setTransform(origXform);
                 g2d.drawImage(ship, cordX, cordY, this);
+                g2d.setTransform(oldXform);
 
                 if (!singleplayer) {
                     Graphics2D g2d2 = (Graphics2D) g;
+                    AffineTransform oldXform2 = g2d2.getTransform();
                     AffineTransform origXform2 = g2d2.getTransform();
 
                     origXform2.rotate(Math.toRadians(currentAngle2), cordX2 + ship2.getWidth(this) / 2, cordY2 + ship2.getHeight(this) / 2);
                     g2d2.setTransform(origXform2);
                     g2d2.drawImage(ship2, cordX2, cordY2, this);
+                    g2d2.setTransform(oldXform2);
                 }
 
                 if (isRotatingRight) {
@@ -474,6 +531,7 @@ public class Game extends JFrame implements ActionListener, KeyListener {
 
                 secondsTimer.start();
                 graphicsTimer.start();
+
 
             } else {
                 String text = "Drone Pilot";
